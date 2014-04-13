@@ -3,7 +3,7 @@ import os
 from werkzeug.contrib.cache import MemcachedCache
 
 from flask import Flask
-from flask.ext.basicauth import BasicAuth
+#from flask.ext.basicauth import BasicAuth
 
 pages = [
     'splash.html', 'contents.html', 'credits.html', 'faq.html', '404.html',

@@ -1,2 +1,9 @@
+build
+
 *~
 *.exe
+*.o
+*.dSYM
+*.pyc
+
+mpc*

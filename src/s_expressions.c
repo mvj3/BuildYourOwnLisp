@@ -161,7 +161,7 @@ lval* builtin_op(lval* a, char* op) {
   for (int i = 0; i < a->count; i++) {
     if (a->cell[i]->type != LVAL_NUM) {
       lval_del(a);
-      return lval_err("Cannot operator on non number!");
+      return lval_err("Cannot operate on non-number!");
     }
   }
   
@@ -186,9 +186,8 @@ lval* builtin_op(lval* a, char* op) {
         lval_del(x); lval_del(y);
         x = lval_err("Division By Zero.");
         break;
-      } else {
-        x->num /= y->num;
       }
+      x->num /= y->num;
     }
     
     /* Delete element now finished with */
@@ -278,7 +277,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Expr   = mpc_new("expr");
   mpc_parser_t* Lispy  = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                          \
       number : /-?[0-9]+/ ;                    \
       symbol : '+' | '-' | '*' | '/' ;         \

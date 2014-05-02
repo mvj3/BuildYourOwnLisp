@@ -5,7 +5,7 @@
 <p>We&#39;ve come quite far now. Your knowledge of C should be good enough for you to stand on your own feet a little more. If you're feeling confident, this chapter is a perfect opportunity to stretch your wings out, and attempt something on your own. It is a fairly short chapter and essentially consists of adding a couple of new builtin functions to deal with comparison and ordering.</p>
 
 <div class='pull-right alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/pug.png" alt="pug"/>
+  <img src="/static/img/pug.png" alt="pug" class="img-responsive"/>
   <p><small>Pug &bull; <strong>if</strong> pug is asleep <strong>then</strong> pug is cute.</small></p>
 </div>
 
@@ -67,7 +67,7 @@ lval* builtin_le(lenv* e, lval* a) { return builtin_ord(e, a, "&lt;="); }
 
     /* If Builtin compare functions, otherwise compare formals and body */
     case LVAL_FUN:
-      if (x-&gt;builtin) {
+      if (x-&gt;builtin || y-&gt;builtin) {
         return x-&gt;builtin == y-&gt;builtin;
       } else {
         return lval_eq(x-&gt;formals, y-&gt;formals) &amp;&amp; lval_eq(x-&gt;body, y-&gt;body);
@@ -179,7 +179,7 @@ lispy&gt; if (== x y) {+ x y} {- x y}
     {+ 1 (len (tail l))}
 })</code></pre>
 
-<p>There is a pleasant symmetry to this sort of recursive function. First we do something for the empty list (this is often called <em>the base case</em>). Then if we get something bigger, we take off a chunk such as the head of the list, and do something to it, before combining it with the rest of the thing to which the function has been already applied.</p>
+<p>Just as in C, there is a pleasant symmetry to this sort of recursive function. First we do something for the empty list (<em>the base case</em>). Then if we get something bigger, we take off a chunk such as the head of the list, and do something to it, before combining it with the rest of the thing to which the function has been already applied.</p>
 
 <p>Here is another function for reversing a list. Like before it checks for the empty list, but this time it returns the empty list back. This makes sense. The reverse of the empty list is just the empty list. But if it gets something bigger than the empty list, it reverses the tail, and stick this in front of the head.</p>
 
@@ -459,7 +459,7 @@ int lval_eq(lval* x, lval* y) {
     
     /* If Builtin compare functions, otherwise compare formals and body */
     case LVAL_FUN:
-      if (x-&gt;builtin) {
+      if (x-&gt;builtin || y-&gt;builtin) {
         return x-&gt;builtin == y-&gt;builtin;
       } else {
         return lval_eq(x-&gt;formals, y-&gt;formals) && lval_eq(x-&gt;body, y-&gt;body);
@@ -673,9 +673,10 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
     if (strcmp(op, "-") == 0) { x-&gt;num -= y-&gt;num; }
     if (strcmp(op, "*") == 0) { x-&gt;num *= y-&gt;num; }
     if (strcmp(op, "/") == 0) {
-      if (y-&gt;num != 0) {
+      if (y-&gt;num == 0) {
         lval_del(x); lval_del(y);
-        return lval_err("Division By Zero.");
+        x = lval_err("Division By Zero.");
+        break;
       }
       x-&gt;num /= y-&gt;num;
     }
@@ -936,7 +937,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Expr   = mpc_new("expr");
   mpc_parser_t* Lispy  = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                                     \
       number : /-?[0-9]+/ ;                               \
       symbol : /[a-zA-Z0-9_+\\-*\\/\\\\=&lt;&gt;!&amp;]+/ ;         \

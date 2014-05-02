@@ -281,7 +281,7 @@ int lval_eq(lval* x, lval* y) {
     case LVAL_SYM: return (strcmp(x->sym, y->sym) == 0);    
     case LVAL_STR: return (strcmp(x->str, y->str) == 0);    
     case LVAL_FUN: 
-      if (x->builtin) {
+      if (x->builtin || y->builtin) {
         return x->builtin == y->builtin;
       } else {
         return lval_eq(x->formals, y->formals) && lval_eq(x->body, y->body);
@@ -492,9 +492,10 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
     if (strcmp(op, "-") == 0) { x->num -= y->num; }
     if (strcmp(op, "*") == 0) { x->num *= y->num; }
     if (strcmp(op, "/") == 0) {
-      if (y->num != 0) {
+      if (y->num == 0) {
         lval_del(x); lval_del(y);
-        return lval_err("Division By Zero.");
+        x = lval_err("Division By Zero.");
+        break;
       }
       x->num /= y->num;
     }
@@ -844,7 +845,7 @@ int main(int argc, char** argv) {
   Expr    = mpc_new("expr");
   Lispy   = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                              \
       number  : /-?[0-9]+/ ;                       \
       symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ; \

@@ -4,7 +4,7 @@
 <h2>Libraries</h2> <hr/>
 
 <div class='pull-right alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/string.png" alt="string"/>
+  <img src="/static/img/string.png" alt="string" class="img-responsive"/>
   <p><small>String &bull; How long is it.</small></p>
 </div>
 
@@ -141,7 +141,7 @@ lispy&gt;</code></pre>
 
 <p>Our final grammar now look like this.</p>
 
-<pre><code data-language='c'>mpca_lang(MPC_LANG_DEFAULT,
+<pre><code data-language='c'>mpca_lang(MPCA_LANG_DEFAULT,
   &quot;                                              \
     number  : /-?[0-9]+/ ;                       \
     symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=&lt;&gt;!&amp;]+/ ; \
@@ -625,7 +625,7 @@ int lval_eq(lval* x, lval* y) {
     case LVAL_SYM: return (strcmp(x-&gt;sym, y-&gt;sym) == 0);    
     case LVAL_STR: return (strcmp(x-&gt;str, y-&gt;str) == 0);    
     case LVAL_FUN:
-      if (x-&gt;builtin) {
+      if (x-&gt;builtin || y-&gt;builtin) {
         return x-&gt;builtin == y-&gt;builtin;
       } else {
         return lval_eq(x-&gt;formals, y-&gt;formals) && lval_eq(x-&gt;body, y-&gt;body);
@@ -836,9 +836,10 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
     if (strcmp(op, "-") == 0) { x-&gt;num -= y-&gt;num; }
     if (strcmp(op, "*") == 0) { x-&gt;num *= y-&gt;num; }
     if (strcmp(op, "/") == 0) {
-      if (y-&gt;num != 0) {
+      if (y-&gt;num == 0) {
         lval_del(x); lval_del(y);
-        return lval_err("Division By Zero.");
+        x = lval_err("Division By Zero.");
+        break;
       }
       x-&gt;num /= y-&gt;num;
     }
@@ -1188,7 +1189,7 @@ int main(int argc, char** argv) {
   Expr    = mpc_new("expr");
   Lispy   = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                              \
       number  : /-?[0-9]+/ ;                       \
       symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=&lt;&gt;!&amp;]+/ ; \

@@ -7,7 +7,7 @@
 <p>This dream hasn't come true yet, but it persists, no matter how flawed. Each new programming technique, or paradigm, that comes along shakes up this idea a little. They promise better re-use of code. Better abstractions, and an easier life for all.</p>
 
 <div class='pull-right alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/bananas.png" alt="bananas"/>
+  <img src="/static/img/bananas.png" alt="bananas" class="img-responsive"/>
   <p><small>Bananaphone &bull; Another naive dream.</small></p>
 </div>
 
@@ -20,7 +20,7 @@
 <p>Another way to think about functions is as a black box that takes some input and produces some output. This idea is subtly different from the former. It is more algebraic, and doesn't talk about <em>computation</em> or <em>commands</em>. This idea is a mathematical concept, and is not tied to some particular machine, or language. In some situations this idea is exceptionally useful. It allows us to think about functions without worrying about their internals, or how they are computed exactly. We can then combine and compose them together without worry of something subtle going wrong. This is the core idea behind an abstraction, and is what allows layers of complexity to work together with each other rather than conflict. This idea's strength can also be its downfall. Because it does not mention anything about computation it does not deal with a number of real world concerns. <em>&quot;How long will this function take to run?&quot;</em>, <em>&quot;Is this function efficient?&quot;</em>, <em>&quot;Will it modify the state of my program? If so how?&quot;</em>.</p>
 
 <div class='pull-left alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/black_box.png" alt="black_box"/>
+  <img src="/static/img/black_box.png" alt="black_box" class="img-responsive"/>
   <p><small>Black Box &bull; Your typical function.</small></p>
 </div>
 
@@ -89,7 +89,7 @@
   /* Set Builtin to Null */
   v-&gt;builtin = NULL;
 
-  /* Built new environment */
+  /* Build new environment */
   v-&gt;env = lenv_new();
 
   /* Set Formals and Body */
@@ -168,7 +168,7 @@ break;</code></pre>
 </div>
 
 <div class='pull-right alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/playgroup.png" alt="playgroup"/>
+  <img src="/static/img/playgroup.png" alt="playgroup" class="img-responsive"/>
   <p><small>Playgroup &bull; Your typical parent environment.</small></p>
 </div>
 
@@ -458,9 +458,9 @@ if (f-&gt;formals-&gt;count &gt; 0 &amp;&amp;
 
 <h3>Function Definition</h3>
 
-<p>Lambdas are clearly a simple and powerful way of defining functions. But the syntax is a little clumsy. There are a lot of brackets and symbols involved. Here is an interesting idea. We can try to write a function that defines a function itself, using some way nicer syntax.</p>
+<p>Lambdas are clearly a simple and powerful way of defining functions. But the syntax is a little clumsy. There are a lot of brackets and symbols involved. Here is an interesting idea. We can try to write a function that defines a function itself, using some nicer syntax.</p>
 
-<p>Essentially what we want is a function that can perform two steps at once. First creating a new function and then defining it some name. We could let the user supply the name and the formal arguments altogether and then separate these out for them and use them in the definition. Here is a function that does that. It takes as input some arguments and some body. It takes the head of the arguments to be the function name and the rest to be the formals to the function body.</p>
+<p>Essentially what we want is a function that can perform two steps at once. First it should create a new function, and then it should define it to some name. Here is the trick. We let the user supply the name and the formal arguments altogether in one list, and then separate these out for them, and use them in the definition. Here is a function that does that. It takes as input some arguments and some body. It takes the head of the arguments to be the function name and the rest to be the formal arguments. It passes the body directly to a lambda.</p>
 
 <pre><code data-language='lispy'>\ {args body} {def (head args) (\ (tail args) body)}</code></pre>
 
@@ -473,7 +473,7 @@ if (f-&gt;formals-&gt;count &gt; 0 &amp;&amp;
 <pre><code data-language='lispy'>fun {add-together x y} {+ x y}</code></pre>
 
 <div class='pull-right alert alert-warning' style="margin: 15px; text-align: center;">
-  <img src="/static/img/curry.png" alt="curry"/>
+  <img src="/static/img/curry.png" alt="curry" class="img-responsive"/>
   <p><small>Currying &bull; Not as good as it sounds.</small></p>
 </div>
 
@@ -493,21 +493,29 @@ if (f-&gt;formals-&gt;count &gt; 0 &amp;&amp;
 
 <p>In some languages this is called <em>currying</em> and <em>uncurrying</em> respectively. This is named after <em>Haskell Curry</em> and unfortunately has nothing to do with our favourite spicy food.</p>
 
-<pre><code data-language='lispy'>lispy> uncurry head 5 6 7
-{5}
-lispy> curry + {5 6 7}
+<pre><code data-language='lispy'>lispy&gt; def {uncurry} pack
+()
+lispy&gt; def {curry} unpack
+()
+lispy&gt; curry + {5 6 7}
 18
+lispy&gt; uncurry head 5 6 7
+{5}
 </code></pre>
 
 <p>Because of the way our <em>partial evaluation</em> works we don't need to think of <em>currying</em> with a specific set of arguments. We can think of functions themselves being in <em>curried</em> or <em>uncurried</em> form.
 
-<pre><code data-language='lispy'>lispy> def {add-unpacked} (curry +)
+<pre><code data-language='lispy'>lispy&gt; def {add-uncurried} +
 ()
-lispy> add-unpacked {5 6 7}
+lispy&gt; def {add-curried} (curry +)
+()
+lispy&gt; add-curried {5 6 7}
+18
+lispy&gt; add-uncurried 5 6 7
 18
 </code></pre>
 
-<p>Have a play around and see what other interesting and powerful functions you can try to come up with. You might be a bit limited for now. In the next chapter well add conditionals which will really start to make our language more complete. But that doesn't mean you won't be able to come up with some other interesting ideas now. Our Lisp really is getting richer!</p>
+<p>Have a play around and see what other interesting and powerful functions you can try to come up with. You might be a bit limited for now. In the next chapter well add conditionals which will really start to make our language more complete. But that doesn't mean you won't be able to come up with some other interesting ideas. Our Lisp is really getting richer!</p>
 
 
 <h2>Reference</h2> <hr/>
@@ -622,7 +630,7 @@ lval* lval_lambda(lval* formals, lval* body) {
   /* Set Builtin to Null */
   v-&gt;builtin = NULL;
   
-  /* Built new environment */
+  /* Build new environment */
   v-&gt;env = lenv_new();
   
   /* Set Formals and Body */
@@ -967,9 +975,10 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
     if (strcmp(op, "-") == 0) { x-&gt;num -= y-&gt;num; }
     if (strcmp(op, "*") == 0) { x-&gt;num *= y-&gt;num; }
     if (strcmp(op, "/") == 0) {
-      if (y-&gt;num != 0) {
+      if (y-&gt;num == 0) {
         lval_del(x); lval_del(y);
-        return lval_err("Division By Zero.");
+        x = lval_err("Division By Zero.");
+        break;
       }
       x-&gt;num /= y-&gt;num;
     }
@@ -1196,7 +1205,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Expr   = mpc_new("expr");
   mpc_parser_t* Lispy  = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                                     \
       number : /-?[0-9]+/ ;                               \
       symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=&lt;&gt;!&amp;]+/ ;        \

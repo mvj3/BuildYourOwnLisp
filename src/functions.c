@@ -97,7 +97,7 @@ lval* lval_lambda(lval* formals, lval* body) {
   /* Set Builtin to Null */
   v->builtin = NULL;
   
-  /* Built new environment */
+  /* Build new environment */
   v->env = lenv_new();
   
   /* Set Formals and Body */
@@ -442,9 +442,10 @@ lval* builtin_op(lenv* e, lval* a, char* op) {
     if (strcmp(op, "-") == 0) { x->num -= y->num; }
     if (strcmp(op, "*") == 0) { x->num *= y->num; }
     if (strcmp(op, "/") == 0) {
-      if (y->num != 0) {
+      if (y->num == 0) {
         lval_del(x); lval_del(y);
-        return lval_err("Division By Zero.");
+        x = lval_err("Division By Zero.");
+        break;
       }
       x->num /= y->num;
     }
@@ -671,7 +672,7 @@ int main(int argc, char** argv) {
   mpc_parser_t* Expr   = mpc_new("expr");
   mpc_parser_t* Lispy  = mpc_new("lispy");
   
-  mpca_lang(MPC_LANG_DEFAULT,
+  mpca_lang(MPCA_LANG_DEFAULT,
     "                                                     \
       number : /-?[0-9]+/ ;                               \
       symbol  : /[a-zA-Z0-9_+\\-*\\/\\\\=<>!&]+/ ;        \

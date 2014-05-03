@@ -207,11 +207,11 @@ lval* builtin_op(lval* a, char* op) {
 
 lval* builtin_head(lval* a) {
   /* Check Error conditions */
-  LASSERT(a, (a->count != 1), "Function 'head' passed too many arguments!");
+  LASSERT(a, (a->count == 1), "Function 'head' passed too many arguments!");
 
-  LASSERT(a, (a->cell[0]->type != LVAL_QEXPR), "Function 'head' passed incorrect types!");
+  LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'head' passed incorrect types!");
 
-  LASSERT(a, (a->cell[0]->count == 0), "Function 'head' passed {}!");
+  LASSERT(a, (a->cell[0]->count != 0), "Function 'head' passed {}!");
 
   /* Otherwise take first argument */
   lval* v = lval_take(a, 0);
@@ -224,11 +224,11 @@ lval* builtin_head(lval* a) {
 
 lval* builtin_tail(lval* a) {
   /* Check Error conditions */
-  LASSERT(a, (a->count != 1), "Function 'tail' passed too many arguments!");
+  LASSERT(a, (a->count == 1), "Function 'tail' passed too many arguments!");
 
-  LASSERT(a, (a->cell[0]->type != LVAL_QEXPR), "Function 'tail' passed incorrect types!");
+  LASSERT(a, (a->cell[0]->type == LVAL_QEXPR), "Function 'tail' passed incorrect types!");
 
-  LASSERT(a, (a->cell[0]->count == 0), "Function 'tail' passed {}!");
+  LASSERT(a, (a->cell[0]->count != 0), "Function 'tail' passed {}!");
 
   /* Take first argument */
   lval* v = lval_take(a, 0);
@@ -269,6 +269,18 @@ lval* builtin_join(lval* a) {
   return x;
 }
 
+lval* builtin(lval* a, char* func) {
+  if (strcmp("list", func) == 0) { return builtin_list(a); }
+  if (strcmp("head", func) == 0) { return builtin_head(a); }
+  if (strcmp("tail", func) == 0) { return builtin_tail(a); }
+  if (strcmp("join", func) == 0) { return builtin_join(a); }
+  if (strcmp("eval", func) == 0) { return builtin_eval(a); }
+  if (strstr("+-*/", func)) { return builtin_op(a, func); }
+
+  lval_del(a);
+  return lval_err("Unknown Function!");
+}
+
 lval* lval_eval_sexpr(lval* v) {
   /* Evaluate Children */
   for (int i = 0; i < v->count; i++) {
@@ -294,7 +306,7 @@ lval* lval_eval_sexpr(lval* v) {
   }
 
   /* Call builtin with operator */
-  lval* result = builtin_op(v, f->sym);
+  lval* result = builtin(v, f->sym);
   lval_del(f);
   return result;
 }

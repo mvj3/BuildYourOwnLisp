@@ -1,5 +1,5 @@
 // Usage
-// cc -std=c99 -g -ledit -Wall parsing.c mpc.c -o parsing.o -v
+// cc -std=c99 -g -ledit -Wall parsing.c mpc.c -o lispy
 
 // 错误列表
 // 1.  [1]    44308 segmentation fault  ./parsing.o 一般是定义mpca_lang格式或参数少了错了
@@ -8,6 +8,16 @@
 
 #include <editline/readline.h>
 #include <histedit.h>
+
+/* Parser Declariations */
+mpc_parser_t* Number;
+mpc_parser_t* Symbol;
+mpc_parser_t* String;
+mpc_parser_t* Comment;
+mpc_parser_t* Sexpr;
+mpc_parser_t* Qexpr;
+mpc_parser_t* Expr;
+mpc_parser_t* Lispy;
 
 /* Forward Declarations */
 struct lval; struct lenv;
@@ -561,6 +571,31 @@ lval* builtin_lt(lenv* e, lval* a) { return builtin_ord(e, a, "<");  }
 lval* builtin_ge(lenv* e, lval* a) { return builtin_ord(e, a, ">="); }
 lval* builtin_le(lenv* e, lval* a) { return builtin_ord(e, a, "<="); }
 
+lval* builtin_print(lenv* e, lval* a) {
+  /* Print each argument followed by a space */
+  for (int i = 0; i < a->count; i++) {
+    lval_print(a->cell[i]); putchar(' ');
+  }
+
+  /* Print a newline and delete arguments */
+  putchar('\n');
+  lval_del(a);
+
+  return lval_sexpr();
+}
+
+lval* builtin_error(lenv* e, lval* a) {
+  LASSERT_NUM("error", a, 1);
+  LASSERT_TYPE("error", a, 0, LVAL_STR);
+
+  /* Construct Error from first argument */
+  lval* err = lval_err(a->cell[0]->str);
+
+  /* Delete arguments and return */
+  lval_del(a);
+  return err;
+}
+
 int lval_eq(lval* x, lval* y) {
 
   /* Different Types are always unequal */
@@ -656,14 +691,7 @@ lval* builtin_lambda(lenv* e, lval* a) {
   return lval_lambda(formals, body);
 }
 
-mpc_parser_t* Number;
-mpc_parser_t* Symbol;
-mpc_parser_t* String;
-mpc_parser_t* Comment;
-mpc_parser_t* Sexpr;
-mpc_parser_t* Qexpr;
-mpc_parser_t* Expr;
-mpc_parser_t* Lispy;
+
 lval* lval_read(mpc_ast_t* t);
 
 lval* builtin_load(lenv* e, lval* a) {
@@ -733,6 +761,10 @@ void lenv_add_builtins(lenv* e) {
   /* Mathematical Functions */
   lenv_add_builtin(e, "+",    builtin_add);  lenv_add_builtin(e, "-",    builtin_sub);
   lenv_add_builtin(e, "*",    builtin_mul);  lenv_add_builtin(e, "/",    builtin_div);
+
+  /* String Functions */
+  lenv_add_builtin(e, "load", builtin_load);
+  lenv_add_builtin(e, "error", builtin_error); lenv_add_builtin(e, "print", builtin_print);
 }
 
 lval* lval_call(lenv* e, lval* f, lval* a) {
@@ -906,14 +938,14 @@ lval* lval_read(mpc_ast_t* t) {
 
 int main(int argc, char** argv) {
   /* Create Some Parsers */
-  mpc_parser_t* Number   = mpc_new("number");
-  mpc_parser_t* Symbol   = mpc_new("symbol");
-  mpc_parser_t* String   = mpc_new("string");
-  mpc_parser_t* Comment  = mpc_new("comment");
-  mpc_parser_t* Sexpr    = mpc_new("sexpr");
-  mpc_parser_t* Qexpr    = mpc_new("qexpr");
-  mpc_parser_t* Expr     = mpc_new("expr");
-  mpc_parser_t* Lispy    = mpc_new("lispy");
+  Number   = mpc_new("number");
+  Symbol   = mpc_new("symbol");
+  String   = mpc_new("string");
+  Comment  = mpc_new("comment");
+  Sexpr    = mpc_new("sexpr");
+  Qexpr    = mpc_new("qexpr");
+  Expr     = mpc_new("expr");
+  Lispy    = mpc_new("lispy");
 
   /* Define them with the following Language */
   mpca_lang(MPCA_LANG_DEFAULT,
@@ -956,6 +988,24 @@ int main(int argc, char** argv) {
     }
 
     free(input);
+  }
+
+  /* Supplied with list of files */
+  if (argc >= 2) {
+
+    /* loop over each supplied filename (starting from 1) */
+    for (int i = 1; i < argc; i++) {
+
+      /* Create an argument list with a single argument being the filename */
+      lval* args = lval_add(lval_sexpr(), lval_str(argv[i]));
+
+      /* Pass to builtin load and get the result */
+      lval* x = builtin_load(e, args);
+
+      /* If the result is an error be sure to print it */
+      if (x->type == LVAL_ERR) { lval_println(x); }
+      lval_del(x);
+    }
   }
 
   lenv_del(e);

@@ -962,32 +962,33 @@ int main(int argc, char** argv) {
     ",
     Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
 
-  /* Print Version and Exit Information */
-  puts("Lispy Version 0.0.0.0.7");
-  puts("Press Ctrl+c to Exit\n");
-
   lenv* e = lenv_new();
   lenv_add_builtins(e);
 
-  /* In a never ending loop */
-  while (1) {
+  /* Interactive Prompt */
+  if (argc == 1) {
+  /* Print Version and Exit Information */
+    puts("Lispy Version 0.0.0.0.7");
+    puts("Press Ctrl+c to Exit\n");
 
-    char* input = readline("lispy> ");
-    add_history(input);
+    while (1) {
+        char* input = readline("lispy> ");
+        add_history(input);
 
-    /* Attempt to parse the user input */
-    mpc_result_t r;
-    if (mpc_parse("<stdin>", input, Lispy, &r)) {
-      lval* x = lval_eval(e, lval_read(r.output));
-      lval_println(x);
-      lval_del(x);
-    } else {
-      /* Otherwise print and delete the Error */
-      mpc_err_print(r.error);
-      mpc_err_delete(r.error);
-    }
+        /* Attempt to parse the user input */
+        mpc_result_t r;
+        if (mpc_parse("<stdin>", input, Lispy, &r)) {
+          lval* x = lval_eval(e, lval_read(r.output));
+          lval_println(x);
+          lval_del(x);
+        } else {
+          /* Otherwise print and delete the Error */
+          mpc_err_print(r.error);
+          mpc_err_delete(r.error);
+        }
 
-    free(input);
+        free(input);
+      }
   }
 
   /* Supplied with list of files */
@@ -1011,7 +1012,7 @@ int main(int argc, char** argv) {
   lenv_del(e);
 
   /* Undefine and delete our parsers */
-  mpc_cleanup(5, Number, Symbol, Sexpr, Qexpr, Expr, Lispy);
+  mpc_cleanup(8, Number, Symbol, String, Comment, Sexpr, Qexpr, Expr, Lispy);
 
   return 0;
 }

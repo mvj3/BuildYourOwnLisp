@@ -10,8 +10,7 @@
 #include <histedit.h>
 
 /* Forward Declarations */
-struct lval;
-struct lenv;
+struct lval; struct lenv;
 typedef struct lval lval;
 typedef struct lenv lenv;
 
@@ -22,13 +21,18 @@ typedef lval*(*lbuiltin)(lenv*, lval*);
 struct lval {
   int type;
 
-  /* Error and Symbol types have some string data */
+  /* Basic */
   long num;
   char* err;
   char* sym;
-  lbuiltin fun;
 
-  /* Count and Pointer to a list of "lval*" */
+  /* Function */
+  lbuiltin builtin;
+  lenv* env;
+  lval* formals;
+  lval* body;
+
+  /* Expression */
   int count;
   lval** cell;
 };
@@ -74,10 +78,10 @@ lval* lval_sym(char* s) {
   return v;
 }
 
-lval* lval_fun(lbuiltin func) {
+lval* lval_fun(lbuiltin builtin) {
   lval* v  = malloc(sizeof(lval));
   v->type  = LVAL_FUN;
-  v->fun    = func;
+  v->builtin = builtin;
   return v;
 }
 
@@ -130,7 +134,7 @@ lval* lval_copy(lval* v) {
 
   switch(v->type) {
     /* Copy Functions and Numbers Directly */
-    case LVAL_FUN: x->fun = v->fun; break;
+    case LVAL_FUN: x->builtin= v->builtin; break;
     case LVAL_NUM: x->num = v->num; break;
 
     /* Copy Strings using malloc and strcpy */
@@ -299,19 +303,19 @@ void lenv_put(lenv* e, lval* k, lval* v) {
 #define LASSERT(args, cond, fmt, ...) \
   if (!(cond)) { lval* err = lval_err(fmt, ##__VA_ARGS__); lval_del(args); return err; }
 
-#define LASSERT_TYPE(func, args, index, expect) \
+#define LASSERT_TYPE(builtin, args, index, expect) \
   LASSERT(args, args->cell[index]->type == expect, \
     "Function '%s' passed incorrect type for argument %i. Got %s, Expected %s.", \
-    func, index, ltype_name(args->cell[index]->type), ltype_name(expect))
+    builtin, index, ltype_name(args->cell[index]->type), ltype_name(expect))
 
-#define LASSERT_NUM(func, args, num) \
+#define LASSERT_NUM(builtin, args, num) \
   LASSERT(args, args->count == num, \
     "Function '%s' passed incorrect number of arguments. Got %i, Expected %i.", \
-    func, args->count, num)
+    builtin, args->count, num)
 
-#define LASSERT_NOT_EMPTY(func, args, index) \
+#define LASSERT_NOT_EMPTY(builtin, args, index) \
   LASSERT(args, args->cell[index]->count != 0, \
-    "Function '%s' passed {} for argument %i.", func, index);
+    "Function '%s' passed {} for argument %i.", builtin, index);
 
 
 lval* lval_eval(lenv* e, lval* v);
@@ -451,9 +455,9 @@ lval* builtin_def(lenv* e, lval* a) {
   return lval_sexpr();
 }
 
-void lenv_add_builtin(lenv* e, char* name, lbuiltin func) {
+void lenv_add_builtin(lenv* e, char* name, lbuiltin builtin) {
   lval* k = lval_sym(name);
-  lval* v = lval_fun(func);
+  lval* v = lval_fun(builtin);
   lenv_put(e, k, v);
   lval_del(k); lval_del(v);
 }
@@ -501,7 +505,7 @@ lval* lval_eval_sexpr(lenv* e, lval* v) {
   }
 
   /* If so call function to get result */
-  lval* result = f->fun(e, v);
+  lval* result = f->builtin(e, v);
   lval_del(f);
   return result;
 }
